@@ -59,7 +59,7 @@ jobs:
 
     - name: Build app
       run: |
-        ti build -p android -b
+        ti build -p android -b -l info
 
     - name: Cleanup Gradle Cache
       # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
