@@ -1,0 +1,76 @@
+name: Android app
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  android_build:
+    runs-on: macos-latest
+    name: Android build
+
+    outputs:
+      output1: ${{ steps.step1.outputs.browserstack_appid }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Node install
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14.18.1
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Cache Node.js modules
+      id: node-cache
+      uses: actions/cache@v3
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-modules-
+          ${{ runner.OS }}-
+
+    - name: Install Titanium
+      run: |
+        sudo npm i -g titanium appcelerator alloy
+
+        ti sdk install 11.0.0.GA
+        ti sdk select 11.0.0.GA
+        sudo chmod 777 /Users/runner/Library/'Application Support'/Titanium/modules/android
+        sudo chmod 777 /Users/runner/Library/'Application Support'/Titanium/modules/iphone
+        sudo chmod 777 /Users/runner/.titanium
+
+    - name: Build app
+      run: |
+        ti build -p android -b
+
+    - name: Cleanup Gradle Cache
+      # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
+      # Restoring these files from a GitHub Actions cache might cause problems for future builds.
+      run: |
+        rm -f ~/.gradle/caches/modules-2/modules-2.lock
+        rm -f ~/.gradle/caches/modules-2/gc.properties
+        # /build/android/app/build/outputs/apk/debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: my APK
+        path: ./build/android/app/build/outputs/apk/debug/app-debug.apk
