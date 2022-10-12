@@ -11,22 +11,9 @@ jobs:
     runs-on: macos-latest
     name: Android build
 
-    outputs:
-      output1: ${{ steps.step1.outputs.browserstack_appid }}
-
     steps:
     - uses: actions/checkout@v2
-    - name: Install Titanium SDK
-      uses:  m1ga/titanium-install@1.0.0
+    - name: Build Titanium Android app
+      uses:  m1ga/titanium-android-build@1.0.0
       with:
         version: 11.1.1.GA
-
-    - name: Build app
-      run: |
-        ti build -p android -b -l info
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: my APK
-        path: ./build/android/app/build/outputs/apk/debug/app-debug.apk
